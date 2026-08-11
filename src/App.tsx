@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BuildingArea, Equipment, InspectionRecord } from './types/hse';
+import { AreaLocation, BuildingLocation, RoomLocation, Equipment, InspectionRecord } from './types/hse';
 import { StorageService } from './services/storageService';
 import { Navbar } from './components/Navbar';
 import { DashboardOverview } from './components/DashboardOverview';
@@ -14,7 +14,9 @@ import { InspectionDetailModal } from './components/InspectionDetailModal';
 export function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'areas' | 'equipment' | 'qr_studio' | 'inspection' | 'csv'>('dashboard');
   
-  const [areas, setAreas] = useState<BuildingArea[]>([]);
+  const [areas, setAreas] = useState<AreaLocation[]>([]);
+  const [buildings, setBuildings] = useState<BuildingLocation[]>([]);
+  const [rooms, setRooms] = useState<RoomLocation[]>([]);
   const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
   const [inspections, setInspections] = useState<InspectionRecord[]>([]);
 
@@ -22,9 +24,6 @@ export function App() {
   const [inspectTargetId, setInspectTargetId] = useState<string | undefined>(undefined);
   const [studioTargetId, setStudioTargetId] = useState<string | undefined>(undefined);
   
-  // Quick prefill state when auto-assigning from Risk Assessment
-  const [prefillEquipmentData, setPrefillEquipmentData] = useState<{ location: string; zone: string; subtype: string } | null>(null);
-
   // Modals
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [selectedInspectionRecord, setSelectedInspectionRecord] = useState<InspectionRecord | null>(null);
@@ -43,6 +42,8 @@ export function App() {
 
   const refreshData = () => {
     setAreas(StorageService.getAreas());
+    setBuildings(StorageService.getBuildings());
+    setRooms(StorageService.getRooms());
     setEquipmentList(StorageService.getEquipment());
     setInspections(StorageService.getInspections());
   };
@@ -61,18 +62,35 @@ export function App() {
   };
 
   // Area Handlers
-  const handleAddArea = (area: Omit<BuildingArea, 'id'>) => {
+  const handleAddArea = (area: Omit<AreaLocation, 'id'>) => {
     StorageService.addArea(area);
-    refreshData();
-  };
-
-  const handleUpdateArea = (area: BuildingArea) => {
-    StorageService.updateArea(area);
     refreshData();
   };
 
   const handleDeleteArea = (id: string) => {
     StorageService.deleteArea(id);
+    refreshData();
+  };
+
+  // Building Handlers
+  const handleAddBuilding = (bldg: Omit<BuildingLocation, 'id'>) => {
+    StorageService.addBuilding(bldg);
+    refreshData();
+  };
+
+  const handleDeleteBuilding = (id: string) => {
+    StorageService.deleteBuilding(id);
+    refreshData();
+  };
+
+  // Room Handlers
+  const handleAddRoom = (room: Omit<RoomLocation, 'id'>) => {
+    StorageService.addRoom(room);
+    refreshData();
+  };
+
+  const handleDeleteRoom = (id: string) => {
+    StorageService.deleteRoom(id);
     refreshData();
   };
 
@@ -107,17 +125,12 @@ export function App() {
     setActiveTab('qr_studio');
   };
 
-  const handleQuickAddExtinguisherForArea = (area: BuildingArea, recommendedSubtype: string) => {
-    setPrefillEquipmentData({
-      location: area.name,
-      zone: area.zone,
-      subtype: recommendedSubtype
-    });
+  const handleQuickAddExtinguisherForRoom = (room: RoomLocation, recommendedSubtype: string) => {
     setActiveTab('equipment');
   };
 
   const handleResetData = () => {
-    if (confirm('Reset to initial EDGE Group Remaya sample equipment & area risk data?')) {
+    if (confirm('Reset to initial EDGE Group Remaya sample equipment & area data?')) {
       StorageService.resetToDefaultData();
       refreshData();
     }
@@ -162,11 +175,16 @@ export function App() {
         {activeTab === 'areas' && (
           <AreaRiskManager
             areas={areas}
+            buildings={buildings}
+            rooms={rooms}
             equipmentList={equipmentList}
             onAddArea={handleAddArea}
-            onUpdateArea={handleUpdateArea}
             onDeleteArea={handleDeleteArea}
-            onQuickAddExtinguisherForArea={handleQuickAddExtinguisherForArea}
+            onAddBuilding={handleAddBuilding}
+            onDeleteBuilding={handleDeleteBuilding}
+            onAddRoom={handleAddRoom}
+            onDeleteRoom={handleDeleteRoom}
+            onQuickAddExtinguisherForRoom={handleQuickAddExtinguisherForRoom}
           />
         )}
 
@@ -212,10 +230,10 @@ export function App() {
           <div className="flex items-center space-x-2">
             <span className="font-bold text-[#ff7700]">EDGE Group • Remaya HSE Division</span>
             <span>•</span>
-            <span>Building Risk & Equipment Compliance System</span>
+            <span>Area ➔ Building ➔ Room Risk & Equipment System</span>
           </div>
           <div className="font-mono text-[11px] text-slate-500">
-            NFPA 10 Portable Fire Extinguisher & ISO 45001 Standard Compliant
+            NFPA 10 Portable Fire Extinguisher Standard Compliant
           </div>
         </div>
       </footer>

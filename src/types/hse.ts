@@ -22,12 +22,31 @@ export type RoomOccupancyType =
   | 'office_hq' 
   | 'medical_post';
 
-export interface BuildingArea {
+// HIERARCHY: Area -> Building -> Room
+export interface AreaLocation {
+  id: string; // e.g. "AREA-D1", "AREA-HQ"
+  name: string; // e.g. "D1", "D2", "S", "XRange HQ Area", "General Island Area"
+  code: string;
+  description?: string;
+}
+
+export interface BuildingLocation {
+  id: string; // e.g. "BLDG-AF2R", "BLDG-HQ-1"
+  areaId: string; // Parent Area ID
+  areaName: string;
+  name: string; // e.g. "AF2R", "Building 1", "Building 2", "Building 3", "Building 4"
+  code: string;
+  description?: string;
+}
+
+export interface RoomLocation {
   id: string; // e.g. "ROOM-101"
-  name: string; // e.g. "Ammunition Vault 1"
-  building: string; // e.g. "Bunker 4"
-  zone: string; // e.g. "Ammunition & Pyrotechnics Store"
-  floorLevel: string; // e.g. "Ground", "Basement 1"
+  areaId: string;
+  areaName: string;
+  buildingId: string;
+  buildingName: string;
+  name: string; // e.g. "Armory Vault 1", "Server Room 101"
+  floorLevel: string; // e.g. "Ground Floor", "1st Floor"
   areaSqMeters: number; // e.g. 150 sq meters
   occupancyType: RoomOccupancyType;
   riskLevel: RiskLevel;
@@ -35,7 +54,8 @@ export interface BuildingArea {
 }
 
 export interface RiskAssessmentResult {
-  areaId: string;
+  roomId: string;
+  roomName: string;
   minRequiredExtinguishers: number;
   recommendedSubtypes: string[];
   currentExtinguisherCount: number;
@@ -50,10 +70,15 @@ export interface Equipment {
   qrCodeUrl?: string; // Direct link payload e.g. "https://xrange.remaya/inspect?id=FE-101"
   type: EquipmentType;
   subtype: string; // e.g. "CO2", "Dry Powder", "Type A Industrial"
-  name: string; // e.g. "5kg CO2 Extinguisher - Range A South"
-  location: string; // e.g. "Building 3 - Room 102"
-  zone: string; // e.g. "Tactical Shooting Range A"
-  areaId?: string; // Linked BuildingArea ID
+  name: string; // e.g. "5kg CO2 Extinguisher - HQ Server Room"
+  areaId: string; // Linked Area ID (e.g. "AREA-HQ")
+  areaName: string; // e.g. "XRange HQ Area"
+  buildingId: string; // Linked Building ID (e.g. "BLDG-HQ-1")
+  buildingName: string; // e.g. "Building 1"
+  roomId: string; // Linked Room ID (e.g. "ROOM-101")
+  roomName: string; // e.g. "Server Room 101"
+  location?: string; // Display string helper
+  zone?: string; // Display string helper
   serialNumber: string;
   capacity: string; // e.g. "5kg", "50 Person Kit", "500ml Dual Wash"
   manufactureDate: string; // YYYY-MM-DD
@@ -72,8 +97,11 @@ export interface InspectionRecord {
   equipmentId: string;
   equipmentType: EquipmentType;
   equipmentName: string;
-  location: string;
-  zone: string;
+  areaName: string;
+  buildingName: string;
+  roomName: string;
+  location?: string;
+  zone?: string;
   inspectorName: string;
   inspectorRole: string;
   inspectionDate: string; // ISO date string
@@ -100,20 +128,9 @@ export interface LocationZoneOption {
 }
 
 export const XRANGE_ZONES: LocationZoneOption[] = [
-  { id: 'zone_range_a', name: 'Tactical Shooting Range A', building: 'Sector 1' },
-  { id: 'zone_range_b', name: 'Tactical Shooting Range B', building: 'Sector 1' },
-  { id: 'zone_ammo_store', name: 'Ammunition & Pyrotechnics Store', building: 'Bunker 4' },
-  { id: 'zone_cmd_center', name: 'Command & Control Center', building: 'HQ Main' },
-  { id: 'zone_armory', name: 'Main Armory & Gear Room', building: 'HQ Vault' },
-  { id: 'zone_depot', name: 'Vehicle Maintenance Depot', building: 'Hangar B' },
-  { id: 'zone_gatehouse', name: 'Main Gatehouse & Security', building: 'Entry Gate' },
-  { id: 'zone_medical', name: 'Medical Emergency Post', building: 'MedCenter' },
+  { id: 'zone_d1', name: 'D1', building: 'AF2R' },
+  { id: 'zone_d2', name: 'D2', building: 'Range Complex D2' },
+  { id: 'zone_s', name: 'S', building: 'Sector S Vault' },
+  { id: 'zone_hq', name: 'XRange HQ Area', building: 'Building 1' },
+  { id: 'zone_island', name: 'General Island Area', building: 'Main Gatehouse' },
 ];
-
-export interface FilterOptions {
-  searchQuery: string;
-  typeFilter: string;
-  statusFilter: string;
-  zoneFilter: string;
-  dateRange: 'all' | '7days' | '30days' | 'this_month' | 'overdue';
-}
