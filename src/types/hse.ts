@@ -11,6 +11,40 @@ export type FirstAidSubtype = 'tactical_range' | 'industrial_a' | 'vehicle_kit' 
 
 export type EquipmentStatus = 'compliant' | 'due_soon' | 'overdue' | 'maintenance_required' | 'out_of_service';
 
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+export type RoomOccupancyType = 
+  | 'ammo_pyro_store' 
+  | 'tactical_range' 
+  | 'electrical_server' 
+  | 'vehicle_workshop' 
+  | 'kitchen_mess' 
+  | 'office_hq' 
+  | 'medical_post';
+
+export interface BuildingArea {
+  id: string; // e.g. "ROOM-101"
+  name: string; // e.g. "Ammunition Vault 1"
+  building: string; // e.g. "Bunker 4"
+  zone: string; // e.g. "Ammunition & Pyrotechnics Store"
+  floorLevel: string; // e.g. "Ground", "Basement 1"
+  areaSqMeters: number; // e.g. 150 sq meters
+  occupancyType: RoomOccupancyType;
+  riskLevel: RiskLevel;
+  notes?: string;
+}
+
+export interface RiskAssessmentResult {
+  areaId: string;
+  minRequiredExtinguishers: number;
+  recommendedSubtypes: string[];
+  currentExtinguisherCount: number;
+  isCountSufficient: boolean;
+  hasCorrectTypes: boolean;
+  coverageStatus: 'OPTIMAL' | 'UNDER_EQUIPPED' | 'WRONG_TYPE' | 'DEFICIENT';
+  recommendations: string[];
+}
+
 export interface Equipment {
   id: string; // e.g. "FE-101"
   qrCodeUrl?: string; // Direct link payload e.g. "https://xrange.remaya/inspect?id=FE-101"
@@ -19,6 +53,7 @@ export interface Equipment {
   name: string; // e.g. "5kg CO2 Extinguisher - Range A South"
   location: string; // e.g. "Building 3 - Room 102"
   zone: string; // e.g. "Tactical Shooting Range A"
+  areaId?: string; // Linked BuildingArea ID
   serialNumber: string;
   capacity: string; // e.g. "5kg", "50 Person Kit", "500ml Dual Wash"
   manufactureDate: string; // YYYY-MM-DD

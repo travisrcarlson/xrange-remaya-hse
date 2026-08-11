@@ -1,10 +1,69 @@
-import { Equipment, InspectionRecord } from '../types/hse';
+import { BuildingArea, Equipment, InspectionRecord } from '../types/hse';
 
-const STORAGE_EQUIPMENT_KEY = 'xrange_hse_equipment_v1';
-const STORAGE_INSPECTIONS_KEY = 'xrange_hse_inspections_v1';
+const STORAGE_AREAS_KEY = 'edge_hse_areas_v1';
+const STORAGE_EQUIPMENT_KEY = 'edge_hse_equipment_v1';
+const STORAGE_INSPECTIONS_KEY = 'edge_hse_inspections_v1';
 
-// Pre-generated sample image data (SVG base64 string for demo preview)
-const SAMPLE_INSPECTION_PHOTO = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="100%" height="100%" fill="%230f172a"/><circle cx="300" cy="200" r="140" fill="%231e293b" stroke="%2310b981" stroke-width="4"/><path d="M280 120 L320 120 L320 160 L280 160 Z" fill="%23ef4444"/><rect x="270" y="160" width="60" height="150" rx="10" fill="%23ef4444"/><path d="M330 180 Q370 200 360 250" fill="none" stroke="%23f59e0b" stroke-width="8" stroke-linecap="round"/><text x="300" y="340" fill="%2338bdf8" font-family="sans-serif" font-size="18" text-anchor="middle" font-weight="bold">XRANGE REMAYA - VERIFIED INSPECTION</text><text x="300" y="365" fill="%2394a3b8" font-family="monospace" font-size="14" text-anchor="middle">TAG: FE-101 | PASS | GAUGE NORMAL</text></svg>`;
+// Pre-generated sample image data
+const SAMPLE_INSPECTION_PHOTO = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="100%" height="100%" fill="%23121214"/><circle cx="300" cy="200" r="140" fill="%231c1c1f" stroke="%23ff5500" stroke-width="4"/><path d="M280 120 L320 120 L320 160 L280 160 Z" fill="%23ef4444"/><rect x="270" y="160" width="60" height="150" rx="10" fill="%23ef4444"/><path d="M330 180 Q370 200 360 250" fill="none" stroke="%23ff5500" stroke-width="8" stroke-linecap="round"/><text x="300" y="340" fill="%23ff5500" font-family="sans-serif" font-size="18" text-anchor="middle" font-weight="bold">EDGE GROUP - VERIFIED HSE INSPECTION</text><text x="300" y="365" fill="%23a1a1aa" font-family="monospace" font-size="14" text-anchor="middle">TAG: FE-101 | PASS | GAUGE NORMAL</text></svg>`;
+
+const INITIAL_AREAS: BuildingArea[] = [
+  {
+    id: 'AREA-101',
+    name: 'Firing Bay 1 & 2',
+    building: 'Sector 1 Main Range',
+    zone: 'Tactical Shooting Range A',
+    floorLevel: 'Ground Floor',
+    areaSqMeters: 250,
+    occupancyType: 'tactical_range',
+    riskLevel: 'high',
+    notes: 'Live tactical firing bay. Requires CO2 and Heavy Powder extinguishers at exit doors.'
+  },
+  {
+    id: 'AREA-102',
+    name: 'Ammunition Vault 1',
+    building: 'Bunker 4',
+    zone: 'Ammunition & Pyrotechnics Store',
+    floorLevel: 'Basement 1',
+    areaSqMeters: 180,
+    occupancyType: 'ammo_pyro_store',
+    riskLevel: 'critical',
+    notes: 'High explosive pyrotechnics vault. Strict NFPA 10 powder & foam requirements.'
+  },
+  {
+    id: 'AREA-103',
+    name: 'Main Server & Comms Room',
+    building: 'HQ Main',
+    zone: 'Command & Control Center',
+    floorLevel: '1st Floor',
+    areaSqMeters: 120,
+    occupancyType: 'electrical_server',
+    riskLevel: 'high',
+    notes: 'Clean agent CO2 mandated to prevent electrical gear damage during discharge.'
+  },
+  {
+    id: 'AREA-104',
+    name: 'Heavy Vehicle Bay',
+    building: 'Hangar B',
+    zone: 'Vehicle Maintenance Depot',
+    floorLevel: 'Ground Floor',
+    areaSqMeters: 350,
+    occupancyType: 'vehicle_workshop',
+    riskLevel: 'high',
+    notes: 'Hydraulic oils and diesel fuels present. AFFF Foam & Powder required.'
+  },
+  {
+    id: 'AREA-105',
+    name: 'Armory Mess Hall Kitchen',
+    building: 'HQ Vault',
+    zone: 'Main Armory & Gear Room',
+    floorLevel: 'Ground Floor',
+    areaSqMeters: 90,
+    occupancyType: 'kitchen_mess',
+    riskLevel: 'medium',
+    notes: 'Commercial kitchen range hood. Class K wet chemical unit required.'
+  }
+];
 
 const INITIAL_EQUIPMENT: Equipment[] = [
   {
@@ -12,9 +71,10 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     type: 'fire_extinguisher',
     subtype: 'CO2 (Carbon Dioxide)',
     name: '5kg CO2 Extinguisher - Range A South',
-    location: 'Firing Bay 3, Wall Mount A2',
+    location: 'Firing Bay 1 & 2',
     zone: 'Tactical Shooting Range A',
-    serialNumber: 'SN-XR-2024-8891',
+    areaId: 'AREA-101',
+    serialNumber: 'SN-EDGE-2024-8891',
     capacity: '5 kg',
     manufactureDate: '2023-01-15',
     expiryDate: '2028-01-15',
@@ -29,9 +89,10 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     type: 'fire_extinguisher',
     subtype: 'ABC Dry Powder',
     name: '6kg Dry Powder - Ammo Storage Vault 1',
-    location: 'Bunker 4 Main Entrance Corridor',
+    location: 'Ammunition Vault 1',
     zone: 'Ammunition & Pyrotechnics Store',
-    serialNumber: 'SN-XR-2024-9042',
+    areaId: 'AREA-102',
+    serialNumber: 'SN-EDGE-2024-9042',
     capacity: '6 kg',
     manufactureDate: '2023-05-20',
     expiryDate: '2028-05-20',
@@ -46,9 +107,10 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     type: 'fire_extinguisher',
     subtype: 'AFFF Foam',
     name: '9L Foam Extinguisher - Heavy Vehicle Bay',
-    location: 'Hangar B North Ramp',
+    location: 'Heavy Vehicle Bay',
     zone: 'Vehicle Maintenance Depot',
-    serialNumber: 'SN-XR-2023-4102',
+    areaId: 'AREA-104',
+    serialNumber: 'SN-EDGE-2023-4102',
     capacity: '9 Liters',
     manufactureDate: '2022-11-10',
     expiryDate: '2027-11-10',
@@ -63,9 +125,10 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     type: 'fire_extinguisher',
     subtype: 'CO2 (Carbon Dioxide)',
     name: '5kg CO2 Extinguisher - Server Room',
-    location: 'HQ Building, Server Rack B',
+    location: 'Main Server & Comms Room',
     zone: 'Command & Control Center',
-    serialNumber: 'SN-XR-2024-1109',
+    areaId: 'AREA-103',
+    serialNumber: 'SN-EDGE-2024-1109',
     capacity: '5 kg',
     manufactureDate: '2024-02-01',
     expiryDate: '2029-02-01',
@@ -80,9 +143,10 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     type: 'fire_extinguisher',
     subtype: 'Wet Chemical (Class K)',
     name: '6L Wet Chemical - Kitchen/Mess Hall',
-    location: 'Main Armory Annex - Catering Area',
+    location: 'Armory Mess Hall Kitchen',
     zone: 'Main Armory & Gear Room',
-    serialNumber: 'SN-XR-2024-3321',
+    areaId: 'AREA-105',
+    serialNumber: 'SN-EDGE-2024-3321',
     capacity: '6 Liters',
     manufactureDate: '2023-09-12',
     expiryDate: '2028-09-12',
@@ -99,25 +163,25 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     name: '9kg Heavy Powder - Gate 1 Guard Post',
     location: 'Main Entry Barrier Post',
     zone: 'Main Gatehouse & Security',
-    serialNumber: 'SN-XR-2023-7720',
+    serialNumber: 'SN-EDGE-2023-7720',
     capacity: '9 kg',
     manufactureDate: '2022-04-18',
     expiryDate: '2027-04-18',
     lastInspectionDate: '2026-08-08',
     nextInspectionDue: '2026-09-08',
     status: 'maintenance_required',
-    notes: 'Pressure gauge pointer in RED under-charge zone during last test. Replacement scheduled.',
+    notes: 'Pressure gauge pointer in RED under-charge zone during last test.',
     createdAt: '2024-02-05T08:00:00.000Z'
   },
-  // Future extensibility HSE equipment
   {
     id: 'FAK-201',
     type: 'first_aid_kit',
     subtype: 'Type B Tactical Range Kit',
     name: 'Tactical Range First Aid Station A',
-    location: 'Range Control Room A, Wall Bracket 1',
+    location: 'Firing Bay 1 & 2',
     zone: 'Tactical Shooting Range A',
-    serialNumber: 'FAK-XR-8812',
+    areaId: 'AREA-101',
+    serialNumber: 'FAK-EDGE-8812',
     capacity: '25 Person Trauma',
     manufactureDate: '2024-01-01',
     expiryDate: '2026-12-31',
@@ -126,57 +190,6 @@ const INITIAL_EQUIPMENT: Equipment[] = [
     status: 'compliant',
     notes: 'Includes tourniquets, chest seals, compression bandages.',
     createdAt: '2024-01-15T08:00:00.000Z'
-  },
-  {
-    id: 'FAK-202',
-    type: 'first_aid_kit',
-    subtype: 'Type A Industrial Kit',
-    name: 'Depot Industrial First Aid Cabinet',
-    location: 'Workshop Office Main Wall',
-    zone: 'Vehicle Maintenance Depot',
-    serialNumber: 'FAK-XR-9943',
-    capacity: '50 Person Industrial',
-    manufactureDate: '2023-08-15',
-    expiryDate: '2026-08-30',
-    lastInspectionDate: '2026-07-20',
-    nextInspectionDue: '2026-08-20',
-    status: 'due_soon',
-    notes: 'Check burn dress refills and eye wash bottles.',
-    createdAt: '2024-01-15T08:00:00.000Z'
-  },
-  {
-    id: 'EWS-301',
-    type: 'eyewash_station',
-    subtype: 'Dual Bottle Wall Unit',
-    name: 'Ammo Handling Emergency Eyewash',
-    location: 'Bunker 4 Prep Area',
-    zone: 'Ammunition & Pyrotechnics Store',
-    serialNumber: 'EWS-XR-1002',
-    capacity: '2 x 500ml Saline',
-    manufactureDate: '2024-03-01',
-    expiryDate: '2027-03-01',
-    lastInspectionDate: '2026-08-04',
-    nextInspectionDue: '2026-09-04',
-    status: 'compliant',
-    notes: 'Bottles sealed and tamper strips clear.',
-    createdAt: '2024-03-05T08:00:00.000Z'
-  },
-  {
-    id: 'AED-401',
-    type: 'aed',
-    subtype: 'Automated External Defibrillator',
-    name: 'MedCenter Main Lobby AED Unit',
-    location: 'Medical Post Reception',
-    zone: 'Medical Emergency Post',
-    serialNumber: 'AED-Zoll-3391',
-    capacity: 'Adult/Child Dual Padset',
-    manufactureDate: '2023-11-10',
-    expiryDate: '2028-11-10',
-    lastInspectionDate: '2026-08-01',
-    nextInspectionDue: '2026-09-01',
-    status: 'compliant',
-    notes: 'Self-test green LED indicator active. Battery at 98%.',
-    createdAt: '2024-03-05T08:00:00.000Z'
   }
 ];
 
@@ -186,10 +199,10 @@ const INITIAL_INSPECTIONS: InspectionRecord[] = [
     equipmentId: 'FE-101',
     equipmentType: 'fire_extinguisher',
     equipmentName: '5kg CO2 Extinguisher - Range A South',
-    location: 'Firing Bay 3, Wall Mount A2',
+    location: 'Firing Bay 1 & 2',
     zone: 'Tactical Shooting Range A',
     inspectorName: 'Captain Ahmed Al-Mansoori',
-    inspectorRole: 'Lead HSE Safety Officer',
+    inspectorRole: 'Lead EDGE HSE Safety Officer',
     inspectionDate: '2026-08-01T09:30:00.000Z',
     status: 'PASS',
     pressureGauge: 'NORMAL',
@@ -199,51 +212,52 @@ const INITIAL_INSPECTIONS: InspectionRecord[] = [
     accessibility: 'CLEAR',
     photoDataUrl: SAMPLE_INSPECTION_PHOTO,
     notes: 'Routine monthly inspection. Pin intact, pressure indicator dead center in green band.'
-  },
-  {
-    id: 'INSP-2026-002',
-    equipmentId: 'FE-106',
-    equipmentType: 'fire_extinguisher',
-    equipmentName: '9kg Heavy Powder - Gate 1 Guard Post',
-    location: 'Main Entry Barrier Post',
-    zone: 'Main Gatehouse & Security',
-    inspectorName: 'Officer Tariq Rashid',
-    inspectorRole: 'Field Inspection Technician',
-    inspectionDate: '2026-08-08T14:15:00.000Z',
-    status: 'FAIL',
-    pressureGauge: 'LOW',
-    tamperSealIntact: false,
-    physicalCondition: 'MINOR_DAMAGE',
-    hoseCondition: 'INTACT',
-    accessibility: 'CLEAR',
-    photoDataUrl: SAMPLE_INSPECTION_PHOTO,
-    notes: 'Gauge pressure dropped below minimum threshold. Pin seal broken. Tagged out for maintenance.',
-    correctiveActionRequired: 'Send to central workshop for recharge and re-certification.'
-  },
-  {
-    id: 'INSP-2026-003',
-    equipmentId: 'FAK-201',
-    equipmentType: 'first_aid_kit',
-    equipmentName: 'Tactical Range First Aid Station A',
-    location: 'Range Control Room A, Wall Bracket 1',
-    zone: 'Tactical Shooting Range A',
-    inspectorName: 'Captain Ahmed Al-Mansoori',
-    inspectorRole: 'Lead HSE Safety Officer',
-    inspectionDate: '2026-08-01T11:00:00.000Z',
-    status: 'PASS',
-    pressureGauge: 'N/A',
-    tamperSealIntact: true,
-    physicalCondition: 'EXCELLENT',
-    hoseCondition: 'N/A',
-    accessibility: 'CLEAR',
-    suppliesReplenished: true,
-    sanitizationChecked: true,
-    photoDataUrl: SAMPLE_INSPECTION_PHOTO,
-    notes: 'Trauma supplies fully stocked. Expiry dates verified up to Dec 2026.'
   }
 ];
 
 export class StorageService {
+  // Area Management
+  public static getAreas(): BuildingArea[] {
+    const raw = localStorage.getItem(STORAGE_AREAS_KEY);
+    if (!raw) {
+      this.saveAreas(INITIAL_AREAS);
+      return INITIAL_AREAS;
+    }
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return INITIAL_AREAS;
+    }
+  }
+
+  public static saveAreas(areas: BuildingArea[]): void {
+    localStorage.setItem(STORAGE_AREAS_KEY, JSON.stringify(areas));
+  }
+
+  public static addArea(area: Omit<BuildingArea, 'id'>): BuildingArea {
+    const areas = this.getAreas();
+    const newArea: BuildingArea = {
+      ...area,
+      id: `AREA-${100 + areas.length + 1}`
+    };
+    const updated = [newArea, ...areas];
+    this.saveAreas(updated);
+    return newArea;
+  }
+
+  public static updateArea(area: BuildingArea): void {
+    const areas = this.getAreas();
+    const updated = areas.map(a => a.id === area.id ? area : a);
+    this.saveAreas(updated);
+  }
+
+  public static deleteArea(id: string): void {
+    const areas = this.getAreas();
+    const updated = areas.filter(a => a.id !== id);
+    this.saveAreas(updated);
+  }
+
+  // Equipment Management
   public static getEquipment(): Equipment[] {
     const raw = localStorage.getItem(STORAGE_EQUIPMENT_KEY);
     if (!raw) {
@@ -290,6 +304,7 @@ export class StorageService {
     this.saveEquipment(updated);
   }
 
+  // Inspection Management
   public static getInspections(): InspectionRecord[] {
     const raw = localStorage.getItem(STORAGE_INSPECTIONS_KEY);
     if (!raw) {
@@ -316,12 +331,11 @@ export class StorageService {
     const updated = [fullRecord, ...list];
     this.saveInspections(updated);
 
-    // Automatically update the equipment's last inspected and next due dates & status
     const eq = this.getEquipmentById(record.equipmentId);
     if (eq) {
       const inspDate = new Date(record.inspectionDate);
       const nextDue = new Date(inspDate);
-      nextDue.setDate(nextDue.getDate() + 30); // 30 days default monthly check
+      nextDue.setDate(nextDue.getDate() + 30);
 
       let newStatus = eq.status;
       if (record.status === 'PASS') {
@@ -345,6 +359,7 @@ export class StorageService {
   }
 
   public static resetToDefaultData(): void {
+    localStorage.setItem(STORAGE_AREAS_KEY, JSON.stringify(INITIAL_AREAS));
     localStorage.setItem(STORAGE_EQUIPMENT_KEY, JSON.stringify(INITIAL_EQUIPMENT));
     localStorage.setItem(STORAGE_INSPECTIONS_KEY, JSON.stringify(INITIAL_INSPECTIONS));
   }

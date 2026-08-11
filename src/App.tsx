@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Equipment, InspectionRecord } from './types/hse';
+import { BuildingArea, Equipment, InspectionRecord } from './types/hse';
 import { StorageService } from './services/storageService';
 import { Navbar } from './components/Navbar';
 import { DashboardOverview } from './components/DashboardOverview';
+import { AreaRiskManager } from './components/AreaRiskManager';
 import { EquipmentManager } from './components/EquipmentManager';
 import { MobileInspectionPortal } from './components/MobileInspectionPortal';
 import { QRStudio } from './components/QRStudio';
@@ -11,8 +12,9 @@ import { QRScannerModal } from './components/QRScannerModal';
 import { InspectionDetailModal } from './components/InspectionDetailModal';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'equipment' | 'qr_studio' | 'inspection' | 'csv'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'areas' | 'equipment' | 'qr_studio' | 'inspection' | 'csv'>('dashboard');
   
+  const [areas, setAreas] = useState<BuildingArea[]>([]);
   const [equipmentList, setEquipmentList] = useState<Equipment[]>([]);
   const [inspections, setInspections] = useState<InspectionRecord[]>([]);
 
@@ -20,11 +22,13 @@ export function App() {
   const [inspectTargetId, setInspectTargetId] = useState<string | undefined>(undefined);
   const [studioTargetId, setStudioTargetId] = useState<string | undefined>(undefined);
   
+  // Quick prefill state when auto-assigning from Risk Assessment
+  const [prefillEquipmentData, setPrefillEquipmentData] = useState<{ location: string; zone: string; subtype: string } | null>(null);
+
   // Modals
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [selectedInspectionRecord, setSelectedInspectionRecord] = useState<InspectionRecord | null>(null);
 
-  // Load initial data & check URL hash for scanned QR code deep link
   useEffect(() => {
     refreshData();
     checkUrlHashRoute();
@@ -38,6 +42,7 @@ export function App() {
   }, []);
 
   const refreshData = () => {
+    setAreas(StorageService.getAreas());
     setEquipmentList(StorageService.getEquipment());
     setInspections(StorageService.getInspections());
   };
@@ -55,7 +60,23 @@ export function App() {
     }
   };
 
-  // Handlers
+  // Area Handlers
+  const handleAddArea = (area: Omit<BuildingArea, 'id'>) => {
+    StorageService.addArea(area);
+    refreshData();
+  };
+
+  const handleUpdateArea = (area: BuildingArea) => {
+    StorageService.updateArea(area);
+    refreshData();
+  };
+
+  const handleDeleteArea = (id: string) => {
+    StorageService.deleteArea(id);
+    refreshData();
+  };
+
+  // Equipment Handlers
   const handleAddEquipment = (newItem: Omit<Equipment, 'createdAt'>) => {
     StorageService.addEquipment(newItem);
     refreshData();
@@ -86,15 +107,23 @@ export function App() {
     setActiveTab('qr_studio');
   };
 
+  const handleQuickAddExtinguisherForArea = (area: BuildingArea, recommendedSubtype: string) => {
+    setPrefillEquipmentData({
+      location: area.name,
+      zone: area.zone,
+      subtype: recommendedSubtype
+    });
+    setActiveTab('equipment');
+  };
+
   const handleResetData = () => {
-    if (confirm('Reset to initial XRange Remaya sample equipment & inspection data?')) {
+    if (confirm('Reset to initial EDGE Group Remaya sample equipment & area risk data?')) {
       StorageService.resetToDefaultData();
       refreshData();
     }
   };
 
   const handleQRScanSuccess = (scannedText: string) => {
-    // Check if scannedText is a full URL or direct tag ID
     let tagId = scannedText;
     if (scannedText.includes('id=')) {
       const match = scannedText.match(/id=([A-Za-z0-9-]+)/);
@@ -105,7 +134,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#0d0d0f] text-slate-100 selection:bg-[#ff5500] selection:text-white">
       
       {/* Navigation Topbar */}
       <Navbar
@@ -127,6 +156,17 @@ export function App() {
             onOpenQRStudio={handleOpenQRStudio}
             onViewInspectionDetail={(record) => setSelectedInspectionRecord(record)}
             onExportCSV={() => setActiveTab('csv')}
+          />
+        )}
+
+        {activeTab === 'areas' && (
+          <AreaRiskManager
+            areas={areas}
+            equipmentList={equipmentList}
+            onAddArea={handleAddArea}
+            onUpdateArea={handleUpdateArea}
+            onDeleteArea={handleDeleteArea}
+            onQuickAddExtinguisherForArea={handleQuickAddExtinguisherForArea}
           />
         )}
 
@@ -167,15 +207,15 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="no-print border-t border-slate-900 bg-slate-950 py-4 px-4 text-center text-xs text-slate-500">
+      <footer className="no-print border-t border-[#27272a] bg-[#0d0d0f] py-4 px-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-400">XRange Remaya HSE Division</span>
+            <span className="font-bold text-[#ff7700]">EDGE Group • Remaya HSE Division</span>
             <span>•</span>
-            <span>Equipment Inspection & Compliance System</span>
+            <span>Building Risk & Equipment Compliance System</span>
           </div>
-          <div className="font-mono text-[11px] text-slate-600">
-            Compliant with ISO 45001 & NFPA 10 Portable Fire Extinguisher Standards
+          <div className="font-mono text-[11px] text-slate-500">
+            NFPA 10 Portable Fire Extinguisher & ISO 45001 Standard Compliant
           </div>
         </div>
       </footer>
